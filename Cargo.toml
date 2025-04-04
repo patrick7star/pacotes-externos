@@ -1,6 +1,9 @@
 [package]
 name = "cargo-listagem"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 
 [dependencies]
+
+[dev-dependencies]
+os_info = "3.0.6"
