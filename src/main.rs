@@ -1,6 +1,3 @@
-
-
-
 /** 
    Este programa tem como objetivo substituir a listagem de libs externas do
  Rust, estas que foram baixados por outras bibliotecas na hora de 
@@ -8,6 +5,19 @@
  coisa bem mais organizada do que o simples comando faz hoje, usando de 
  sintaxe colorida e organizando versões numa simples linha.
 */
+
+mod linque;
+
+use std::collections::HashMap;
+use std::io::{Result as ResultadoIO};
+use std::path::{Path, PathBuf};
+use std::fs::read_dir;
+// Outros módulos deste projeto:
+use crate::linque::{linca_executaveis};
+
+type Pacote = HashMap<String, Vec<String>>;
+type Par = (String, Vec<String>);
+type Pares = Vec<Par>;
 
 
 #[cfg(target_os="linux")]
@@ -21,10 +31,6 @@ const RAIZ: &'static str = concat!(
    env!("HOMEPATH"), 
    "/.cargo/registry/src"
 );
-
-use std::io::{Result as ResultadoIO};
-use std::path::{Path, PathBuf};
-use std::fs::read_dir;
 
 fn todos_diretorios_fontes() -> ResultadoIO<Vec<PathBuf>> {
    // bolsa para coletar caminhos de códigos-fontes.
@@ -61,10 +67,6 @@ fn identificando_fonte<'a>(codigo_fonte: &'a Path)
    diretorio_nome.to_str().unwrap()
    .rsplit_once('-').unwrap()
 }
-
-use std::collections::HashMap;
-
-type Pacote = HashMap<String, Vec<String>>;
 
 fn organizando_fontes_e_suas_versoes() -> Option<Pacote> {
    /* agloremando códigos-fontes iguais, porém com versões diferentes
@@ -144,9 +146,6 @@ fn listagem_das_fontes(repositorio: Pacote) {
    }
 }
 
-type Par = (String, Vec<String>);
-type Pares = Vec<Par>;
-
 fn ordena_repositorio(mut repositorio: Pacote) -> Pares {
    /* Ordena uma lista de strings de a até z, baseado na chave do mapa. */
    let mut array = repositorio.drain().collect::<Pares>(); 
@@ -178,7 +177,7 @@ fn main() {
    let todo_repositoiro = organizando_fontes_e_suas_versoes();
 
    println!(
-      "\ndepedências baixadas no computador({} \
+      "\nDepedências baixadas no computador({} \
       pacotes distintos, {} no total):",
       todo_repositoiro.as_ref().unwrap().len(),
       // soma de todas versões, é o total de pacotes baixados.
@@ -190,11 +189,15 @@ fn main() {
    
    // barra de termino de página.
    println!("\n{}\n", &"-".repeat(60));
+   linca_executaveis("pacotes-externos");
 }
 
 #[cfg(test)]
+#[allow(non_snake_case)]
 mod tests {
+   extern crate os_info;
    use super::*;
+   use std::env::var;
 
    #[test]
    fn verificando_se_filtra_fontes_apenas() {
@@ -255,5 +258,34 @@ mod tests {
    #[test]
    fn comparacao_strings() {
       assert!("abacate" < "abacaxi");
+   }
+
+   #[test]
+   #[ignore="apenas um teste da biblioteca"]
+   fn que_tipo_de_informacao_fornece() {
+      let X = os_info::get();
+      const Y: &str = " --- ";
+
+      println!(
+         "Informações sobre a máquina:\n\tArquitetura: {}\n\t \
+         Sistema do Tipo:{:?}\n\tCodename do OS: {}\n\tEdição: '{}'\n\t \
+         Tipo de OS: {:?}\n\tVersionamento: {:?}",
+         X.architecture().unwrap_or(Y), X.bitness(), 
+         X.codename().unwrap_or(Y), X.edition().unwrap_or(Y),
+         X.os_type(), X.version()
+      );
+   }
+
+   #[test]
+   #[ignore="simples verificação de ambiente"]
+   fn variavel_de_ambiente_existente() {
+      match var("LINKS") {
+         Ok(data) =>
+            { println!("LINKS: {data:}"); }
+         Err(erro) => { 
+            println!("Está é a mensagem de erro: '{erro:?}'"); 
+            assert!(false);
+         }
+      }
    }
 }
